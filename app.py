@@ -251,13 +251,7 @@ def salesforce_hook():
 
 @app.route('/create_knowledge_article', methods=['POST'])
 def create_knowledge_article():
-    data = request.json
-    query = data.get('query')
-
-    if not query :
-        return jsonify({"status": "error", "message": "Invalid data payload"}), 400
-    
-    return jsonify({"status": "success", "message": {query}}), 200
+    return jsonify({"status": "success"}), 200
 
 @app.route('/', methods=['GET'])
 def health_check():
