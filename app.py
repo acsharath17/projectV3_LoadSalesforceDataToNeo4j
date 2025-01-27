@@ -253,7 +253,16 @@ def salesforce_hook():
 def create_knowledge_article():
     data = request.json
     qry = data.get('query')
-    return jsonify({"status": "success", "message": f"Unhandled sobject: {qry}"}), 200
+
+    enhanced_graph = Neo4jGraph(url=NEO4J_URI, username=NEO4J_USER, password=NEO4J_PASSWORD,enhanced_schema=True)
+    enhanced_graph.refresh_schema()
+    llm = ChatOpenAI(model="gpt-4o", temperature=0,openai_api_key=OPEN_API_KEY)
+    chain = GraphCypherQAChain.from_llm(
+        graph=enhanced_graph, llm=llm, verbose=True, allow_dangerous_requests=True
+    )
+
+    response = chain.invoke({"query": {qry}})
+    return jsonify({"status": "success", "message": f"Answer: {response}"}), 200
 
 @app.route('/', methods=['GET'])
 def health_check():
