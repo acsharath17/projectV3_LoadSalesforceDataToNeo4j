@@ -251,7 +251,9 @@ def salesforce_hook():
 
 @app.route('/create_knowledge_article', methods=['POST'])
 def create_knowledge_article():
-    return jsonify({"status": "success"}), 200
+    data = request.json
+    qry = data.get('query')
+    return jsonify({"status": "success", "message": f"Unhandled sobject: {qry}"}), 200
 
 @app.route('/', methods=['GET'])
 def health_check():
