@@ -256,17 +256,8 @@ def create_knowledge_article():
 
     if not query :
         return jsonify({"status": "error", "message": "Invalid data payload"}), 400
-
-    enhanced_graph = Neo4jGraph(url=NEO4J_URI, username=NEO4J_USER, password=NEO4J_PASSWORD,enhanced_schema=True)
-    enhanced_graph.refresh_schema()
-    llm = ChatOpenAI(model="gpt-4o", temperature=0,openai_api_key=OPEN_API_KEY)
-    chain = GraphCypherQAChain.from_llm(
-        graph=enhanced_graph, llm=llm, verbose=True, allow_dangerous_requests=True
-    )
-
-    response = chain.invoke({"query": {query}})
-
-    return jsonify({"status": "success", "message": {response}}), 200
+    
+    return jsonify({"status": "success", "message": {query}}), 200
 
 @app.route('/', methods=['GET'])
 def health_check():
