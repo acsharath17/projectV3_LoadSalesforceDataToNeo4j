@@ -1,6 +1,9 @@
 from neo4j import GraphDatabase
 from dotenv import load_dotenv
 from flask import Flask, request, jsonify
+from langchain_neo4j import Neo4jGraph
+from langchain_neo4j import GraphCypherQAChain
+from langchain_openai import ChatOpenAI
 import os
 
 app = Flask(__name__)
@@ -14,6 +17,7 @@ load_dotenv()
 NEO4J_URI = os.getenv("NEO4J_URI")
 NEO4J_USER = os.getenv("NEO4J_USERNAME")
 NEO4J_PASSWORD = os.getenv("NEO4J_PASSWORD")
+OPEN_API_KEY = os.getenv("OPEN_API_KEY")
 
 driver = GraphDatabase.driver(NEO4J_URI, auth=(NEO4J_USER, NEO4J_PASSWORD))
 
@@ -245,6 +249,24 @@ def salesforce_hook():
 
     return jsonify({"status": "success"}), 200
 
+@app.route('/create_knowledge_article', methods=['POST'])
+def create_knowledge_article():
+    data = request.json
+    query = data.get('query')
+
+    if not query :
+        return jsonify({"status": "error", "message": "Invalid data payload"}), 400
+
+    enhanced_graph = Neo4jGraph(url=NEO4J_URI, username=NEO4J_USER, password=NEO4J_PASSWORD,enhanced_schema=True)
+    enhanced_graph.refresh_schema()
+    llm = ChatOpenAI(model="gpt-4o", temperature=0,openai_api_key=OPEN_API_KEY)
+    chain = GraphCypherQAChain.from_llm(
+        graph=enhanced_graph, llm=llm, verbose=True, allow_dangerous_requests=True
+    )
+
+    response = chain.invoke({"query": {query}})
+
+    return jsonify({"status": "success", "message": {response}}), 200
 
 @app.route('/', methods=['GET'])
 def health_check():
